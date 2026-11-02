@@ -4,6 +4,25 @@ Todos los cambios relevantes de **Tres Horizontes** se documentan aquí, del má
 
 ---
 
+## [0.3.0] — 2026-11-01 · Seguridad
+
+### 🔐 Seguridad (`backend/server.js`)
+- **Límite de intentos por IP:** login 10 cada 15 min, registro 5 por hora, contacto y newsletter 5 por hora, y 120 peticiones por minuto en general. Al pasarse, la API responde `429` con un mensaje claro.
+- **El login ya no revela qué emails existen:** siempre responde "Email o contraseña incorrectos." y tarda lo mismo exista o no la cuenta.
+- **Validación en el servidor:** nombre, email, contraseña (de 8 a 72 caracteres), fechas, viajeros, notas, mensajes de contacto e identificadores.
+- **Los errores internos ya no se muestran:** el detalle se registra en el servidor y el usuario recibe un mensaje genérico.
+- **CORS restringido:** en producción solo los dominios de `CORS_ORIGINS`; en desarrollo, `localhost` y `127.0.0.1`.
+- **Cabeceras de seguridad:** `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Content-Security-Policy`, y `Strict-Transport-Security` cuando llega por HTTPS. Además, ya no se anuncia que el servidor es Express.
+- **Preparado para HTTPS:** con `NODE_ENV=production` y `TRUST_PROXY=1` redirige todo a HTTPS.
+- **JWT reforzado:** algoritmo fijado (HS256) y el servidor no arranca en producción si `JWT_SECRET` falta o tiene menos de 32 caracteres.
+- Los cuerpos de las peticiones se limitan a 10 KB, y el JSON mal formado y las rutas inexistentes devuelven errores limpios.
+
+### 🔁 Cambiado
+- La contraseña mínima pasa de **6 a 8 caracteres** en el registro. Las cuentas existentes siguen entrando con su contraseña actual.
+- Los mensajes de error del servidor ahora están en español.
+
+---
+
 ## [0.2.0] — 2026-11-01 · Panel del viajero y sistema de animaciones
 
 ### ✨ Nuevo

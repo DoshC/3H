@@ -129,7 +129,7 @@ $('registerForm').addEventListener('submit', async (e) => {
 
   if (!name) return invalid('regName', 'registerMessage', 'Escribe tu nombre.');
   if (!$('regEmail').checkValidity() || !email) return invalid('regEmail', 'registerMessage', 'Escribe un email válido.');
-  if (password.length < 6) return invalid('regPassword', 'registerMessage', 'La contraseña debe tener al menos 6 caracteres.');
+  if (password.length < 8 || password.length > 72) return invalid('regPassword', 'registerMessage', 'La contraseña debe tener entre 8 y 72 caracteres.');
   if (password !== confirm) return invalid('regPasswordConfirm', 'registerMessage', 'Las contraseñas no coinciden.');
 
   setLoading(btn, true);
@@ -137,11 +137,8 @@ $('registerForm').addEventListener('submit', async (e) => {
     const { ok, data } = await postJSON('/auth/register', { name, email, password });
 
     if (!ok) {
-      const duplicado = /duplicate|unique/i.test(data.error || '');
-      const msg = duplicado
-        ? 'Ese email ya tiene una cuenta. Inicia sesión.'
-        : (data.error || 'No se pudo completar el registro.');
-      showMessage('registerMessage', msg, 'error');
+      // El servidor ya responde con mensajes en español y sin detalles internos
+      showMessage('registerMessage', data.error || 'No se pudo completar el registro.', 'error');
       return;
     }
 
@@ -173,11 +170,8 @@ $('loginForm').addEventListener('submit', async (e) => {
     const { ok, data } = await postJSON('/auth/login', { email, password });
 
     if (!ok) {
-      const mensajes = {
-        'User not found': 'Esa cuenta no existe. Regístrate primero.',
-        'Invalid password': 'Contraseña incorrecta.'
-      };
-      showMessage('loginMessage', mensajes[data.error] || data.error || 'No se pudo iniciar sesión.', 'error');
+      // Mensaje único "Email o contraseña incorrectos" para no revelar qué cuentas existen
+      showMessage('loginMessage', data.error || 'No se pudo iniciar sesión.', 'error');
       return;
     }
 

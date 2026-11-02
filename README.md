@@ -202,8 +202,19 @@ DB_PORT=
 DB_NAME=
 DB_USER=
 DB_PASSWORD=
-JWT_SECRET=
+JWT_SECRET=        # mínimo 32 caracteres
 PORT=5000
+
+# Solo en producción:
+# NODE_ENV=production
+# CORS_ORIGINS=https://tu-dominio.com     (dominios permitidos, separados por comas)
+# TRUST_PROXY=1                          (si va detrás de un proxy HTTPS: Render, Railway, Nginx…)
+```
+
+Para generar un `JWT_SECRET` seguro:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
 ```bash
@@ -343,7 +354,7 @@ Por esta razón, la plataforma deberá:
 
 🚧 **Proyecto en desarrollo**
 
-**Versión actual: 0.2.0**
+**Versión actual: 0.3.0**
 
 Ya están listos:
 
@@ -352,6 +363,7 @@ Ya están listos:
 - ✅ Panel del viajero: resumen, reservas, nueva reserva y perfil.
 - ✅ Cancelación de reservas y edición de perfil.
 - ✅ Sistema de animaciones en toda la web.
+- ✅ Seguridad: límite de intentos, validación, errores ocultos, CORS y cabeceras.
 
 Próximos pasos: opiniones de viajeros, contacto con asesor y publicación.
 
