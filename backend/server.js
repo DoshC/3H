@@ -123,7 +123,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (!validPassword) return res.status(401).json({ error: 'Invalid password' });
     
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ user: { id: user.id, email: user.email, name: user.name }, token });
+    res.json({ user: { id: user.id, email: user.email, name: user.name, phone: user.phone }, token });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -153,10 +153,14 @@ app.get('/api/tours/:id', async (req, res) => {
 app.post('/api/bookings', verifyToken, async (req, res) => {
   try {
     const { tour_id, travel_date, guests, notes } = req.body;
-    
+    const n = Number(guests);
+    if (!tour_id || !travel_date) return res.status(400).json({ error: 'tour_id and travel_date are required' });
+    if (!Number.isInteger(n) || n < 1 || n > 20) return res.status(400).json({ error: 'guests must be between 1 and 20' });
+    if (new Date(travel_date) < new Date(new Date().toDateString())) return res.status(400).json({ error: 'travel_date is in the past' });
+
     const result = await pool.query(
       'INSERT INTO bookings (user_id, tour_id, travel_date, guests, notes) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [req.userId, tour_id, travel_date, guests, notes]
+      [req.userId, tour_id, travel_date, n, notes]
     );
     
     res.status(201).json(result.rows[0]);
@@ -169,10 +173,48 @@ app.post('/api/bookings', verifyToken, async (req, res) => {
 app.get('/api/bookings', verifyToken, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT b.*, t.name, t.destination FROM bookings b JOIN tours t ON b.tour_id = t.id WHERE b.user_id = $1 ORDER BY b.booking_date DESC',
+      `SELECT b.*, t.name, t.destination, t.price, t.duration, t.category, t.image_url
+         FROM bookings b JOIN tours t ON b.tour_id = t.id
+        WHERE b.user_id = $1
+        ORDER BY b.booking_date DESC`,
       [req.userId]
     );
     res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// CANCEL BOOKING (protected, solo reservas propias y pendientes/confirmadas)
+app.patch('/api/bookings/:id/cancel', verifyToken, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `UPDATE bookings SET status = 'cancelled'
+        WHERE id = $1 AND user_id = $2 AND status IN ('pending', 'confirmed')
+        RETURNING *`,
+      [req.params.id, req.userId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Booking not found or not cancellable' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// UPDATE PROFILE (protected)
+app.put('/api/users/me', verifyToken, async (req, res) => {
+  try {
+    const name = String(req.body.name || '').trim();
+    const phone = String(req.body.phone || '').trim();
+    if (!name) return res.status(400).json({ error: 'Name is required' });
+    if (phone.length > 20) return res.status(400).json({ error: 'Phone too long' });
+
+    const result = await pool.query(
+      'UPDATE users SET name = $1, phone = $2 WHERE id = $3 RETURNING id, email, name, phone',
+      [name, phone || null, req.userId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

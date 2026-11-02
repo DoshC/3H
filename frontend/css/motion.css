@@ -1,0 +1,123 @@
+/* =====================================================
+   TRES HORIZONTES — motion.css
+   Capa de movimiento compartida por la landing y el dashboard.
+   Se carga después de style.css / dashboard.css y solo añade:
+   no cambia layout ni colores. Todo anima opacity, transform,
+   translate o scale (compositor de la GPU).
+   Sin JS o con "reducir movimiento" todo queda en su estado final.
+   ===================================================== */
+
+:root {
+  --dur-fast: 0.25s;
+  --dur-base: 0.55s;
+  --dur-slow: 0.9s;
+  /* Rebote corto para microinteracciones */
+  --ease-spring: linear(0, 0.38 9%, 0.83 21%, 1.04 31%, 1.09 38%, 1.06 47%, 1 63%, 0.99 78%, 1);
+}
+
+/* ===== 1. TRANSICIÓN ENTRE PÁGINAS (landing ⇄ panel) =====
+   View Transitions entre documentos: el navegador hace un fundido con
+   un desplazamiento de 10px y el logo viaja de un header al otro.
+   Navegadores sin soporte simplemente navegan como siempre. */
+@view-transition { navigation: auto; }
+
+header .logo { view-transition-name: brand; }
+
+@keyframes vtOut { to { opacity: 0; transform: translate3d(0, -10px, 0); } }
+@keyframes vtIn  { from { opacity: 0; transform: translate3d(0, 10px, 0); } }
+
+::view-transition-old(root) { animation: vtOut 0.28s var(--ease) both; }
+::view-transition-new(root) { animation: vtIn 0.45s var(--ease) 0.08s both; }
+::view-transition-group(brand) { animation-duration: 0.45s; animation-timing-function: var(--ease); }
+
+/* ===== 2. TÍTULOS: palabras que suben desde una máscara =====
+   main.js parte los h2 en .w > span y les pone --i. Se disparan cuando
+   el bloque .reveal que los contiene recibe .is-visible. */
+.split .w {
+  display: inline-block; overflow: hidden; vertical-align: top;
+  padding: 0 0.04em 0.12em; margin: 0 -0.04em -0.12em;
+}
+.split .w > span {
+  display: inline-block;
+  transition: transform var(--dur-slow) var(--ease);
+  transition-delay: calc(var(--d, 0ms) + 120ms + var(--i, 0) * 55ms);
+}
+.reveal:not(.is-visible) .split .w > span { transform: translate3d(0, 110%, 0); }
+
+/* Subrayado que se dibuja bajo la palabra en cursiva */
+h2 em { position: relative; }
+h2 em::after {
+  content: ""; position: absolute; left: 0.04em; right: 0.04em; bottom: 0.02em;
+  height: 2px; border-radius: 2px; background: var(--accent); opacity: 0.7;
+  transform-origin: left center;
+  transition: transform 0.8s var(--ease) calc(var(--d, 0ms) + 650ms);
+}
+.reveal:not(.is-visible) h2 em::after { transform: scaleX(0); }
+.modal h2 em::after { display: none; }
+
+/* ===== 3. IMÁGENES: cortina que se retira =====
+   Una capa del color de superficie cubre la foto y se recoge hacia
+   arriba mientras la foto hace zoom out (regla ya existente en style.css). */
+.reveal .arch-visual::before {
+  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: var(--surface-2);
+  transform-origin: center top;
+  transform: scaleY(0);
+  transition: transform var(--dur-slow) var(--ease) calc(var(--d, 0ms) + 80ms);
+}
+.reveal:not(.is-visible) .arch-visual::before { transform: scaleY(1); }
+
+/* ===== 4. ESTADOS DE PULSACIÓN =====
+   Los botones ceden al pulsar y rebotan al soltar. Usa la propiedad
+   "scale" para no pisar el transform del hover ni el efecto magnético. */
+.btn { transition-property: transform, scale, background-color, box-shadow, border-color, color; }
+.btn:active:not(:disabled) { scale: 0.96; transition-duration: 0.12s; }
+.btn:not(:active) { transition-timing-function: var(--ease), var(--ease-spring), ease, var(--ease), ease, ease; }
+
+/* ===== 5. PARALLAX NATIVO AL HACER SCROLL =====
+   Scroll-driven animations: la foto de cada arco se desplaza un poco más
+   lenta que la página. Solo CSS, sin listeners. Se usa "translate" para
+   que se sume al zoom (transform) de la regla de reveal y del hover. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes archParallax {
+      from { translate: 0 -7%; }
+      to   { translate: 0 7%; }
+    }
+    .arch-visual .fill {
+      inset: -8% 0;
+      animation: archParallax linear both;
+      animation-timeline: view();
+    }
+  }
+}
+
+/* ===== 6. PANEL: cambio de sección =====
+   dashboard.js envuelve el cambio de vista en startViewTransition. La vista
+   que sale se desvanece hacia arriba; la que entra no necesita animación
+   aquí porque ya trae la suya (viewIn + ENTRADA AL CARGAR en dashboard.css).
+   La barra lateral y el header quedan fuera de la captura y no se mueven. */
+.app .panel { view-transition-name: panel; }
+::view-transition-group(panel) { animation: none; }
+::view-transition-old(panel) { animation: vtOut 0.22s var(--ease) both; }
+::view-transition-new(panel) { animation: none; }
+
+/* ===== REDUCIR MOVIMIENTO ===== */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
+  .split .w > span, h2 em::after, .reveal .arch-visual::before { transform: none !important; }
+  .btn:active { scale: none; }
+}
+
+/* ===== 7. LANDING: el menú marca la sección visible =====
+   main.js añade .is-active al enlace de la sección en pantalla. */
+.nav-links > a.is-active::after { transform: scaleX(1); }
+header.scrolled .nav-links a.is-active { color: var(--primary); }
+
+/* ===== 8. PANEL: cambio de vista sin fundido global =====
+   Solo se anima el contenido (grupo "panel"); el resto de la página se
+   muestra en vivo para que la pastilla del menú se deslice sin fantasmas. */
+html.vt-view::view-transition-old(root) { display: none; }
+html.vt-view::view-transition-new(root) { animation: none; }

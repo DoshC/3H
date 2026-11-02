@@ -5,6 +5,7 @@
 const API_URL = 'http://localhost:5000/api';
 const $ = (id) => document.getElementById(id);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 // =====================================================
 //  UTILIDADES
@@ -47,15 +48,50 @@ function saveSession(data) {
 // =====================================================
 //  MODALES
 // =====================================================
+let lastFocus = null;
+
 function openModal(id) {
-  $(id).style.display = 'flex';
+  const modal = $(id);
+  lastFocus = document.activeElement;
+  modal.classList.add('is-open');
+  modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+  const first = modal.querySelector('input');
+  if (first) setTimeout(() => first.focus(), 50);
 }
 
 function closeModal(id) {
-  $(id).style.display = 'none';
+  const modal = $(id);
+  if (!modal.classList.contains('is-open')) return;
+  modal.classList.remove('is-open');
+  modal.setAttribute('aria-hidden', 'true');
+  modal.querySelectorAll('[aria-invalid]').forEach((f) => f.removeAttribute('aria-invalid'));
   document.body.style.overflow = '';
+  if (lastFocus) lastFocus.focus();
 }
+
+// Mantiene el foco dentro del modal abierto
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  const modal = document.querySelector('.modal.is-open');
+  if (!modal) return;
+  const focusables = modal.querySelectorAll('button, input, a[href]');
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+
+// Marca un campo como inválido y lleva el foco a él
+function invalid(fieldId, msgId, text) {
+  const f = $(fieldId);
+  f.setAttribute('aria-invalid', 'true');
+  f.focus();
+  showMessage(msgId, text, 'error');
+}
+document.querySelectorAll('.modal .field').forEach((f) => {
+  f.addEventListener('input', () => f.removeAttribute('aria-invalid'));
+});
 
 function openRegisterModal() {
   $('registerForm').reset();
@@ -91,14 +127,10 @@ $('registerForm').addEventListener('submit', async (e) => {
   const confirm = $('regPasswordConfirm').value;
   const btn = e.submitter || $('registerForm').querySelector('button[type="submit"]');
 
-  if (password !== confirm) {
-    showMessage('registerMessage', 'Las contraseñas no coinciden.', 'error');
-    return;
-  }
-  if (password.length < 6) {
-    showMessage('registerMessage', 'La contraseña debe tener al menos 6 caracteres.', 'error');
-    return;
-  }
+  if (!name) return invalid('regName', 'registerMessage', 'Escribe tu nombre.');
+  if (!$('regEmail').checkValidity() || !email) return invalid('regEmail', 'registerMessage', 'Escribe un email válido.');
+  if (password.length < 6) return invalid('regPassword', 'registerMessage', 'La contraseña debe tener al menos 6 caracteres.');
+  if (password !== confirm) return invalid('regPasswordConfirm', 'registerMessage', 'Las contraseñas no coinciden.');
 
   setLoading(btn, true);
   try {
@@ -132,6 +164,9 @@ $('loginForm').addEventListener('submit', async (e) => {
   const email = $('loginEmail').value.trim().toLowerCase();
   const password = $('loginPassword').value;
   const btn = e.submitter || $('loginForm').querySelector('button[type="submit"]');
+
+  if (!email || !$('loginEmail').checkValidity()) return invalid('loginEmail', 'loginMessage', 'Escribe un email válido.');
+  if (!password) return invalid('loginPassword', 'loginMessage', 'Escribe tu contraseña.');
 
   setLoading(btn, true);
   try {
@@ -219,11 +254,41 @@ function showTab(cat) {
   });
 }
 
+// Indicador que se desliza bajo la pestaña activa
+const tabRow = document.querySelector('.tab-row');
+let tabIndicator = null;
+if (tabRow) {
+  tabIndicator = document.createElement('span');
+  tabIndicator.className = 'tab-indicator';
+  tabIndicator.setAttribute('aria-hidden', 'true');
+  tabRow.prepend(tabIndicator);
+  tabRow.classList.add('has-indicator');
+}
+
+function moveIndicator() {
+  const active = tabRow && tabRow.querySelector('.tab-btn.active');
+  if (!active || !tabIndicator) return;
+  tabIndicator.style.width = `${active.offsetWidth}px`;
+  tabIndicator.style.height = `${active.offsetHeight}px`;
+  tabIndicator.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
+}
+
+if (tabIndicator) {
+  moveIndicator();
+  // Recoloca cuando cargan las fuentes (cambian los anchos) y luego activa la transición
+  document.fonts.ready.then(() => {
+    moveIndicator();
+    requestAnimationFrame(() => tabIndicator.classList.add('is-ready'));
+  });
+  window.addEventListener('resize', moveIndicator);
+}
+
 tabs.forEach((btn) => {
   btn.addEventListener('click', () => {
     tabs.forEach((b) => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
     btn.classList.add('active');
     btn.setAttribute('aria-selected', 'true');
+    moveIndicator();
     showTab(btn.dataset.tab);
   });
 });
@@ -242,8 +307,10 @@ const REVEAL = [
   ['.team-card', 'zoom', 100],
   ['.blog-card', '', 110],
   ['.faq-item', '', 90],
+  ['.faq-wrap > div:first-child', 'left', 0],
   ['.cta-video', 'zoom', 0],
-  ['.newsletter', 'zoom', 0]
+  ['.newsletter', 'zoom', 0],
+  ['.footer-mark', '', 0]
 ];
 
 const revealObserver = new IntersectionObserver((entries, obs) => {
@@ -320,7 +387,8 @@ const heroSlider = document.querySelector('.hero-slider');
 const progress = document.createElement('div');
 Object.assign(progress.style, {
   position: 'fixed', top: '0', left: '0', right: '0', height: '3px',
-  background: '#0A5B4A', transformOrigin: 'left center', transform: 'scaleX(0)',
+  background: 'linear-gradient(90deg, #0A5B4A, #D4A574)',
+  transformOrigin: 'left center', transform: 'scaleX(0)',
   zIndex: '100'
 });
 document.body.appendChild(progress);
@@ -331,10 +399,22 @@ if (heroSlider && !reduceMotion) {
   heroSlider.style.bottom = '-10%';
 }
 
+let lastY = window.scrollY;
+
 function onScroll() {
   const y = window.scrollY;
 
   header.classList.toggle('scrolled', y > 40);
+
+  // El header se esconde al bajar y reaparece al subir
+  const bajando = y > lastY + 4;
+  const subiendo = y < lastY - 4;
+  const bloqueado = header.classList.contains('nav-open')
+    || header.matches(':focus-within')
+    || document.querySelector('.modal.is-open');
+  if (bajando && y > 480 && !bloqueado) header.classList.add('is-hidden');
+  else if (subiendo || y <= 480) header.classList.remove('is-hidden');
+  if (bajando || subiendo) lastY = y;
 
   const max = document.documentElement.scrollHeight - window.innerHeight;
   progress.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
@@ -358,18 +438,156 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 onScroll();
 
+header.addEventListener('focusin', () => header.classList.remove('is-hidden'));
+
 // =====================================================
-//  HERO SLIDER
+//  HERO SLIDER con indicadores
 // =====================================================
 const slides = document.querySelectorAll('.hero-slide');
+const dots = document.querySelectorAll('.hero-dot');
+const SLIDE_MS = 6000;
 let slideIdx = 0;
-if (slides.length > 1 && !reduceMotion) {
-  setInterval(() => {
-    slides[slideIdx].classList.remove('active');
-    slideIdx = (slideIdx + 1) % slides.length;
-    void slides[slideIdx].offsetWidth; // reinicia el zoom lento
-    slides[slideIdx].classList.add('active');
-  }, 5000);
+let slideTimer = null;
+
+document.documentElement.style.setProperty('--slide-ms', `${SLIDE_MS}ms`);
+
+function goToSlide(n) {
+  slides[slideIdx].classList.remove('active');
+  if (dots[slideIdx]) {
+    dots[slideIdx].classList.remove('is-active');
+    dots[slideIdx].setAttribute('aria-pressed', 'false');
+  }
+  slideIdx = (n + slides.length) % slides.length;
+  void slides[slideIdx].offsetWidth; // reinicia el zoom lento
+  slides[slideIdx].classList.add('active');
+  if (dots[slideIdx]) {
+    void dots[slideIdx].offsetWidth; // reinicia la barra de progreso
+    dots[slideIdx].classList.add('is-active');
+    dots[slideIdx].setAttribute('aria-pressed', 'true');
+  }
+}
+
+function startAutoplay() {
+  clearInterval(slideTimer);
+  if (reduceMotion || slides.length < 2) return;
+  slideTimer = setInterval(() => goToSlide(slideIdx + 1), SLIDE_MS);
+}
+
+dots.forEach((dot, i) => {
+  dot.addEventListener('click', () => {
+    goToSlide(i);
+    startAutoplay();
+  });
+});
+
+if (reduceMotion) document.querySelector('.hero-dots')?.classList.add('is-static');
+startAutoplay();
+
+// =====================================================
+//  TITULAR DEL HERO: entra palabra por palabra
+// =====================================================
+// Parte un título en .w > span (con --i) conservando sus <em>.
+// El texto completo queda en aria-label para lectores de pantalla.
+function splitWords(el) {
+  const escape = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let i = 0;
+  const wrapWords = (text) => text.split(/(\s+)/).map((part) => (
+    part.trim() ? `<span class="w"><span style="--i:${i++}">${escape(part)}</span></span>` : part
+  )).join('');
+
+  el.setAttribute('aria-label', el.textContent.replace(/\s+/g, ' ').trim());
+  el.innerHTML = Array.from(el.childNodes).map((node) => {
+    if (node.nodeType === Node.TEXT_NODE) return wrapWords(node.textContent);
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      node.innerHTML = wrapWords(node.textContent);
+      return node.outerHTML;
+    }
+    return '';
+  }).join('');
+}
+
+const heroTitle = document.querySelector('.hero h1');
+if (heroTitle && !reduceMotion) {
+  splitWords(heroTitle);
+  heroTitle.classList.add('is-split');
+}
+
+// Títulos de sección: suben palabra por palabra al aparecer (motion.css › 2)
+if (!reduceMotion) {
+  document.querySelectorAll('.section-head h2, .faq-wrap h2, .cta-video h2, .newsletter h2').forEach((h2) => {
+    splitWords(h2);
+    h2.classList.add('split');
+  });
+}
+
+// =====================================================
+//  INTERACCIONES CON CURSOR (solo ratón / trackpad)
+// =====================================================
+// Luz que sigue al cursor en las tarjetas de valores
+if (canHover) {
+  document.querySelectorAll('.why-card').forEach((card) => {
+    card.addEventListener('pointermove', (e) => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      card.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  });
+}
+
+// Inclinación 3D suave en las tarjetas arco
+if (canHover && !reduceMotion) {
+  document.querySelectorAll('.dest-card .arch-visual, .tour-card .arch-visual').forEach((el) => {
+    el.addEventListener('pointermove', (e) => {
+      const r = el.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      el.style.transform = `perspective(900px) translateY(-8px) rotateX(${(-py * 8).toFixed(2)}deg) rotateY(${(px * 8).toFixed(2)}deg)`;
+    });
+    el.addEventListener('pointerleave', () => { el.style.transform = ''; });
+  });
+}
+
+// Vista previa flotante que sigue al cursor en la lista de regiones
+if (canHover && !reduceMotion) {
+  const preview = document.createElement('div');
+  preview.className = 'row-preview';
+  preview.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(preview);
+
+  let x = 0, y = 0, tx = 0, ty = 0;
+  let active = false;
+  let raf = null;
+
+  const target = (e) => {
+    // Se pone a la derecha del cursor, o a la izquierda si no cabe
+    tx = e.clientX + 232 > window.innerWidth ? e.clientX - 232 : e.clientX + 32;
+    ty = e.clientY - 120;
+  };
+
+  const loop = () => {
+    const dx = tx - x;
+    x += dx * 0.16;
+    y += (ty - y) * 0.16;
+    const rot = Math.max(-10, Math.min(10, dx * 0.15));
+    preview.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rot}deg)`;
+    raf = (active || Math.abs(dx) > 0.5) ? requestAnimationFrame(loop) : null;
+  };
+
+  const hide = () => { active = false; preview.classList.remove('is-on'); };
+
+  document.querySelectorAll('.country-row[data-img]').forEach((row) => {
+    row.addEventListener('pointerenter', (e) => {
+      preview.style.backgroundImage = `url('${row.dataset.img}')`;
+      target(e);
+      if (!active && !preview.classList.contains('is-on')) { x = tx; y = ty; }
+      active = true;
+      preview.classList.add('is-on');
+      if (!raf) raf = requestAnimationFrame(loop);
+    });
+    row.addEventListener('pointermove', target);
+    row.addEventListener('pointerleave', hide);
+  });
+  window.addEventListener('scroll', () => { if (active) hide(); }, { passive: true });
 }
 
 // =====================================================
@@ -473,12 +691,55 @@ document.querySelectorAll('.play-btn').forEach((btn) => {
 });
 
 // =====================================================
-//  SESIÓN: si ya hay token, ir directo al dashboard
+//  SESIÓN: con token, la barra muestra "Mi panel" en vez de
+//  redirigir (antes la landing era inaccesible con sesión).
 // =====================================================
-window.addEventListener('load', () => {
-  if (localStorage.getItem('token')) {
-    window.location.href = 'dashboard.html';
-  }
+const isLoggedIn = () => Boolean(localStorage.getItem('token'));
+
+if (isLoggedIn()) {
+  let nombre = '';
+  try { nombre = (JSON.parse(localStorage.getItem('user')) || {}).name || ''; } catch { /* sesión corrupta */ }
+  const actions = $('authActions');
+  actions.querySelectorAll('.btn').forEach((b) => b.remove());
+  const link = document.createElement('a');
+  link.href = 'dashboard.html';
+  link.className = 'btn btn-primary btn-sm';
+  link.innerHTML = '<i class="ph ph-squares-four"></i>';
+  link.append(nombre ? ` Hola, ${nombre.split(' ')[0]}` : ' Mi panel');
+  actions.prepend(link);
+}
+
+// =====================================================
+//  TARJETAS DE TOURS: llevan a reservar
+// =====================================================
+function irAReservar() {
+  if (isLoggedIn()) window.location.href = 'dashboard.html#reservar';
+  else openLoginModal();
+}
+tourCards.forEach((card) => {
+  card.addEventListener('click', irAReservar);
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); irAReservar(); }
+  });
 });
 
 console.log('✓ Tres Horizontes — frontend cargado');
+
+// =====================================================
+//  MENÚ: marca la sección que está en pantalla (motion.css › 7)
+// =====================================================
+const spyLinks = Array.from(document.querySelectorAll('.nav-links > a[href^="#"], .nav-links > .has-dropdown > a[href^="#"]'));
+const spySections = ['top', ...spyLinks.map((a) => a.getAttribute('href').slice(1))]
+  .map((id) => document.getElementById(id))
+  .filter(Boolean);
+
+if (spyLinks.length && 'IntersectionObserver' in window) {
+  const spy = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const id = entry.target.id;
+      spyLinks.forEach((a) => a.classList.toggle('is-active', a.getAttribute('href') === `#${id}`));
+    });
+  }, { rootMargin: '-45% 0px -50% 0px' }); // franja en el centro de la pantalla
+  spySections.forEach((s) => spy.observe(s));
+}

@@ -8,42 +8,53 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%230A5B4A'/><circle cx='8' cy='8' r='3' fill='%23D4A574'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/motion.css">
 </head>
 <body>
 
 <a href="#main" class="skip-link">Ir al contenido</a>
 
 <!-- MODAL REGISTRO -->
-<div id="registerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="regTitle">
+<div id="registerModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="regTitle" aria-hidden="true">
   <div class="modal-card">
+    <button type="button" class="modal-close" aria-label="Cerrar" onclick="closeRegisterModal()"><i class="ph ph-x"></i></button>
     <h2 id="regTitle">Crear cuenta</h2>
+    <p class="modal-sub">Guarda tus reservas y recibe el itinerario de cada viaje.</p>
     <form id="registerForm" class="modal-form" novalidate>
-      <input class="field" type="text" id="regName" placeholder="Tu nombre" required>
-      <input class="field" type="email" id="regEmail" placeholder="tu@email.com" required>
-      <input class="field" type="password" id="regPassword" placeholder="Contraseña (mínimo 6 caracteres)" minlength="6" required>
-      <input class="field" type="password" id="regPasswordConfirm" placeholder="Repite la contraseña" required>
-      <button type="submit" class="btn btn-primary btn-block">Registrarse</button>
-      <button type="button" class="btn btn-ghost btn-block" onclick="closeRegisterModal()">Cerrar</button>
+      <label for="regName">Nombre</label>
+      <input class="field" type="text" id="regName" placeholder="Tu nombre" autocomplete="name" required>
+      <label for="regEmail">Email</label>
+      <input class="field" type="email" id="regEmail" placeholder="tu@email.com" autocomplete="email" required>
+      <label for="regPassword">Contraseña</label>
+      <input class="field" type="password" id="regPassword" placeholder="Mínimo 6 caracteres" minlength="6" autocomplete="new-password" required>
+      <label for="regPasswordConfirm">Repite la contraseña</label>
+      <input class="field" type="password" id="regPasswordConfirm" placeholder="Repite la contraseña" autocomplete="new-password" required>
+      <button type="submit" class="btn btn-primary btn-block">Crear cuenta</button>
     </form>
-    <p id="registerMessage" class="modal-message" role="status"></p>
+    <p id="registerMessage" class="modal-message" role="status" aria-live="polite"></p>
+    <p class="modal-switch">¿Ya tienes cuenta? <button type="button" class="link-btn" onclick="closeRegisterModal(); openLoginModal();">Inicia sesión</button></p>
   </div>
 </div>
 
 <!-- MODAL LOGIN -->
-<div id="loginModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+<div id="loginModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="loginTitle" aria-hidden="true">
   <div class="modal-card">
+    <button type="button" class="modal-close" aria-label="Cerrar" onclick="closeLoginModal()"><i class="ph ph-x"></i></button>
     <h2 id="loginTitle">Inicia sesión</h2>
+    <p class="modal-sub">Entra para ver tus reservas y apartar tu próximo viaje.</p>
     <form id="loginForm" class="modal-form" novalidate>
-      <input class="field" type="email" id="loginEmail" placeholder="tu@email.com" required>
-      <input class="field" type="password" id="loginPassword" placeholder="Contraseña" required>
-      <button type="submit" class="btn btn-primary btn-block">Inicia sesión</button>
-      <button type="button" class="btn btn-ghost btn-block" onclick="closeLoginModal()">Cerrar</button>
+      <label for="loginEmail">Email</label>
+      <input class="field" type="email" id="loginEmail" placeholder="tu@email.com" autocomplete="email" required>
+      <label for="loginPassword">Contraseña</label>
+      <input class="field" type="password" id="loginPassword" placeholder="Tu contraseña" autocomplete="current-password" required>
+      <button type="submit" class="btn btn-primary btn-block">Entrar</button>
     </form>
-    <p id="loginMessage" class="modal-message" role="status"></p>
+    <p id="loginMessage" class="modal-message" role="status" aria-live="polite"></p>
+    <p class="modal-switch">¿Primera vez? <button type="button" class="link-btn" onclick="closeLoginModal(); openRegisterModal();">Crea una cuenta</button></p>
   </div>
 </div>
 
@@ -75,8 +86,8 @@
       </div>
     </div>
 
-    <div style="display:flex; align-items:center; gap:8px;">
-      <button class="btn btn-ghost btn-sm" onclick="openRegisterModal()" style="border-color:transparent; color:#fff;">Registrarse</button>
+    <div class="nav-actions" id="authActions">
+      <button class="btn btn-nav-ghost btn-sm" onclick="openRegisterModal()">Registrarse</button>
       <button class="btn btn-primary btn-sm" onclick="openLoginModal()">Inicia sesión</button>
       <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button>
     </div>
@@ -94,10 +105,10 @@
     </div>
     <div class="hero-overlay"></div>
     <div class="wrap hero-inner">
-      <h1>Conoce la verdadera Colombia, despacio.</h1>
+      <h1>Conoce la verdadera Colombia, <em>despacio.</em></h1>
       <p class="lede">Desde la costa de ballenas de Nuquí hasta los cielos estrellados de Guainía, armamos viajes alrededor de las tres Colombias que pocos viajeros ven, planeados y guiados por gente local.</p>
       <div class="hero-actions">
-        <a href="#tours" class="btn btn-primary">Explora tours</a>
+        <a href="#tours" class="btn btn-primary">Explora tours <i class="ph ph-arrow-right" aria-hidden="true"></i></a>
       </div>
       <div class="hero-strip">
         <div class="hero-strip-item"><strong>3</strong><span>regiones</span></div>
@@ -106,14 +117,31 @@
         <div class="hero-strip-item"><strong>RNT</strong><span>operador registrado</span></div>
       </div>
     </div>
+    <div class="hero-bar wrap">
+      <div class="hero-dots" role="group" aria-label="Fotos de portada">
+        <button type="button" class="hero-dot is-active" aria-label="Foto 1: costa del Pacífico" aria-pressed="true"><span></span></button>
+        <button type="button" class="hero-dot" aria-label="Foto 2: playa de Tayrona" aria-pressed="false"><span></span></button>
+        <button type="button" class="hero-dot" aria-label="Foto 3: río del Guainía" aria-pressed="false"><span></span></button>
+      </div>
+      <a href="#destinations" class="scroll-cue">Desliza <i aria-hidden="true"></i></a>
+    </div>
   </section>
+
+  <!-- CINTA DE DESTINOS -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <div class="marquee-group"><span>Nuquí</span><b></b><span>Tayrona</span><b></b><span>Guainía</span><b></b><span>Ciudad Perdida</span><b></b><span>Cartagena</span><b></b><span>Eje Cafetero</span><b></b></div>
+      <div class="marquee-group"><span>Nuquí</span><b></b><span>Tayrona</span><b></b><span>Guainía</span><b></b><span>Ciudad Perdida</span><b></b><span>Cartagena</span><b></b><span>Eje Cafetero</span><b></b></div>
+    </div>
+  </div>
 
   <!-- DESTINOS -->
   <section id="destinations">
     <div class="wrap">
       <div class="row-between">
         <div class="section-head">
-          <h2>Tres regiones que merecen reorganizar tu calendario.</h2>
+          <div class="kicker"><span class="horizons" aria-hidden="true"><i></i><i></i><i></i></span>Destinos</div>
+          <h2>Tres regiones que merecen reorganizar tu <em>calendario.</em></h2>
           <p>Cada rincón de Colombia tiene su propia magia. Estos son nuestros tres favoritos.</p>
         </div>
       </div>
@@ -143,7 +171,8 @@
     <section style="padding-top:96px;">
       <div class="wrap">
         <div class="section-head center">
-          <h2>Tres valores en los que se construye cada itinerario.</h2>
+          <div class="kicker"><span class="horizons" aria-hidden="true"><i></i><i></i><i></i></span>Cómo viajamos</div>
+          <h2>Tres valores en los que se construye cada <em>itinerario.</em></h2>
         </div>
         <div class="why-grid">
           <div class="why-card">
@@ -178,7 +207,7 @@
     <div class="wrap">
       <div class="cta-video">
         <div>
-          <h2>Mira primero</h2>
+          <h2>Mira <em>primero</em></h2>
           <p>Qué se ve en diez días atravesando tres Colombias: costas, campamentos fluviales y mañanas que no salen en un folleto.</p>
         </div>
         <button class="play-btn" aria-label="Reproducir video"><i class="ph-fill ph-play"></i></button>
@@ -190,12 +219,13 @@
   <section>
     <div class="wrap">
       <div class="section-head">
-        <h2>Elige una región, nosotros armamos la ruta.</h2>
+        <div class="kicker"><span class="horizons" aria-hidden="true"><i></i><i></i><i></i></span>Regiones</div>
+        <h2>Elige una región, nosotros armamos <em>la ruta.</em></h2>
       </div>
       <div class="country-list">
-        <div class="country-row"><span class="idx">01</span><h3>Nuquí, Chocó</h3><span class="sub">{{n}} tours</span><a href="#tours" class="view">Ver tours <i class="ph ph-arrow-right"></i></a></div>
-        <div class="country-row"><span class="idx">02</span><h3>Tayrona, Santa Marta</h3><span class="sub">{{n}} tours</span><a href="#tours" class="view">Ver tours <i class="ph ph-arrow-right"></i></a></div>
-        <div class="country-row"><span class="idx">03</span><h3>Guainía, Amazonas</h3><span class="sub">{{n}} tours</span><a href="#tours" class="view">Ver tours <i class="ph ph-arrow-right"></i></a></div>
+        <div class="country-row" data-img="img/nuqui.jpg"><span class="idx">01</span><h3>Nuquí, Chocó</h3><span class="sub">{{n}} tours</span><a href="#tours" class="view">Ver tours <i class="ph ph-arrow-right"></i></a></div>
+        <div class="country-row" data-img="img/tayrona.jpg"><span class="idx">02</span><h3>Tayrona, Santa Marta</h3><span class="sub">{{n}} tours</span><a href="#tours" class="view">Ver tours <i class="ph ph-arrow-right"></i></a></div>
+        <div class="country-row" data-img="img/guainia.jpg"><span class="idx">03</span><h3>Guainía, Amazonas</h3><span class="sub">{{n}} tours</span><a href="#tours" class="view">Ver tours <i class="ph ph-arrow-right"></i></a></div>
         <div class="country-row"><span class="idx">04</span><h3>Cartagena</h3><span class="sub">{{n}} tours</span><a href="#tours" class="view">Ver tours <i class="ph ph-arrow-right"></i></a></div>
         <div class="country-row"><span class="idx">05</span><h3>Eje Cafetero</h3><span class="sub">{{n}} tours</span><a href="#tours" class="view">Ver tours <i class="ph ph-arrow-right"></i></a></div>
       </div>
@@ -206,7 +236,8 @@
   <section id="tours">
     <div class="wrap">
       <div class="section-head">
-        <h2>Encuentra tu tipo de viaje.</h2>
+        <div class="kicker"><span class="horizons" aria-hidden="true"><i></i><i></i><i></i></span>Tours</div>
+        <h2>Encuentra tu tipo de <em>viaje.</em></h2>
         <p>Filtra por lo que necesitas: un destino, un lugar para quedarte o algo para hacer.</p>
       </div>
       <div class="tab-row" role="tablist">
@@ -216,20 +247,20 @@
       </div>
 
       <div class="tour-grid">
-        <div class="tour-card show" data-cat="destination"><div class="arch-visual"><div class="fill fill-2"></div><span class="tag">Chocó</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Costa de Ballenas</h3><p class="loc">Playa y selva tropical</p></div>
-        <div class="tour-card show" data-cat="destination"><div class="arch-visual"><div class="fill fill-1"></div><span class="tag">Santa Marta</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Tayrona Costero</h3><p class="loc">Mar encuentra sierra</p></div>
-        <div class="tour-card show" data-cat="destination"><div class="arch-visual"><div class="fill fill-4"></div><span class="tag">Amazonas</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Ruta de Ríos Guainía</h3><p class="loc">Ríos de agua negra</p></div>
-        <div class="tour-card show" data-cat="destination"><div class="arch-visual"><div class="fill fill-5"></div><span class="tag">Santa Marta</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Trek Ciudad Perdida</h3><p class="loc">Sierra Nevada</p></div>
+        <div class="tour-card show" data-cat="destination" tabindex="0" role="link" aria-label="Reservar Costa de Ballenas"><div class="arch-visual"><div class="fill" style="background-image:url('img/nuqui.jpg')"></div><span class="tag">Chocó</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Costa de Ballenas</h3><p class="loc">Playa y selva tropical</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
+        <div class="tour-card show" data-cat="destination" tabindex="0" role="link" aria-label="Reservar Tayrona Costero"><div class="arch-visual"><div class="fill" style="background-image:url('img/tayrona.jpg')"></div><span class="tag">Santa Marta</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Tayrona Costero</h3><p class="loc">Mar encuentra sierra</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
+        <div class="tour-card show" data-cat="destination" tabindex="0" role="link" aria-label="Reservar Ruta de Ríos Guainía"><div class="arch-visual"><div class="fill" style="background-image:url('img/guainia.jpg')"></div><span class="tag">Amazonas</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Ruta de Ríos Guainía</h3><p class="loc">Ríos de agua negra</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
+        <div class="tour-card show" data-cat="destination" tabindex="0" role="link" aria-label="Reservar Trek Ciudad Perdida"><div class="arch-visual"><div class="fill fill-5"></div><span class="tag">Santa Marta</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Trek Ciudad Perdida</h3><p class="loc">Sierra Nevada</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
 
-        <div class="tour-card" data-cat="stay"><div class="arch-visual"><div class="fill fill-1"></div><span class="tag">Chocó</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Termales Jungle Lodge</h3><p class="loc">Solo acceso por bote</p></div>
-        <div class="tour-card" data-cat="stay"><div class="arch-visual"><div class="fill fill-2"></div><span class="tag">Santa Marta</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Tayrona Eco Cabañas</h3><p class="loc">Cabañas en la playa</p></div>
-        <div class="tour-card" data-cat="stay"><div class="arch-visual"><div class="fill fill-3"></div><span class="tag">Amazonas</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Río Negro Camp</h3><p class="loc">Tiendas a la orilla</p></div>
-        <div class="tour-card" data-cat="stay"><div class="arch-visual"><div class="fill fill-5"></div><span class="tag">Chocó</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Casa Termales</h3><p class="loc">Hospedaje familiar</p></div>
+        <div class="tour-card" data-cat="stay" tabindex="0" role="link" aria-label="Reservar Termales Jungle Lodge"><div class="arch-visual"><div class="fill" style="background-image:url('img/hero-1.jpg')"></div><span class="tag">Chocó</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Termales Jungle Lodge</h3><p class="loc">Solo acceso por bote</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
+        <div class="tour-card" data-cat="stay" tabindex="0" role="link" aria-label="Reservar Tayrona Eco Cabañas"><div class="arch-visual"><div class="fill" style="background-image:url('img/hero-2.jpg')"></div><span class="tag">Santa Marta</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Tayrona Eco Cabañas</h3><p class="loc">Cabañas en la playa</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
+        <div class="tour-card" data-cat="stay" tabindex="0" role="link" aria-label="Reservar Río Negro Camp"><div class="arch-visual"><div class="fill" style="background-image:url('img/hero-3.jpg')"></div><span class="tag">Amazonas</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Río Negro Camp</h3><p class="loc">Tiendas a la orilla</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
+        <div class="tour-card" data-cat="stay" tabindex="0" role="link" aria-label="Reservar Casa Termales"><div class="arch-visual"><div class="fill fill-5"></div><span class="tag">Chocó</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Casa Termales</h3><p class="loc">Hospedaje familiar</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
 
-        <div class="tour-card" data-cat="activity"><div class="arch-visual"><div class="fill fill-4"></div><span class="tag">Chocó</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Avistamiento de ballenas</h3><p class="loc">Medio día, por temporada</p></div>
-        <div class="tour-card" data-cat="activity"><div class="arch-visual"><div class="fill fill-2"></div><span class="tag">Santa Marta</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Snorkel Cabo San Juan</h3><p class="loc">Medio día</p></div>
-        <div class="tour-card" data-cat="activity"><div class="arch-visual"><div class="fill fill-1"></div><span class="tag">Amazonas</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Expedición de cielos</h3><p class="loc">Media noche</p></div>
-        <div class="tour-card" data-cat="activity"><div class="arch-visual"><div class="fill fill-3"></div><span class="tag">Amazonas</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Trek por formaciones</h3><p class="loc">Día completo</p></div>
+        <div class="tour-card" data-cat="activity" tabindex="0" role="link" aria-label="Reservar Avistamiento de ballenas"><div class="arch-visual"><div class="fill" style="background-image:url('img/hero-1.jpg')"></div><span class="tag">Chocó</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Avistamiento de ballenas</h3><p class="loc">Medio día, por temporada</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
+        <div class="tour-card" data-cat="activity" tabindex="0" role="link" aria-label="Reservar Snorkel Cabo San Juan"><div class="arch-visual"><div class="fill" style="background-image:url('img/tayrona.jpg')"></div><span class="tag">Santa Marta</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Snorkel Cabo San Juan</h3><p class="loc">Medio día</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
+        <div class="tour-card" data-cat="activity" tabindex="0" role="link" aria-label="Reservar Expedición de cielos"><div class="arch-visual"><div class="fill" style="background-image:url('img/guainia.jpg')"></div><span class="tag">Amazonas</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Expedición de cielos</h3><p class="loc">Media noche</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
+        <div class="tour-card" data-cat="activity" tabindex="0" role="link" aria-label="Reservar Trek por formaciones"><div class="arch-visual"><div class="fill fill-3"></div><span class="tag">Amazonas</span><div class="price-badge"><span class="from">desde</span><span class="amt">{{precio}}</span></div></div><h3>Trek por formaciones</h3><p class="loc">Día completo</p><span class="cta">Reservar <i class="ph ph-arrow-right"></i></span></div>
       </div>
     </div>
   </section>
@@ -238,7 +269,8 @@
   <section id="team">
     <div class="wrap">
       <div class="section-head">
-        <h2>Guías que crecieron en estos caminos.</h2>
+        <div class="kicker"><span class="horizons" aria-hidden="true"><i></i><i></i><i></i></span>Guías</div>
+        <h2>Guías que crecieron en estos <em>caminos.</em></h2>
       </div>
       <div class="team-grid">
         <div class="team-card"><div class="team-photo fill-1"></div><h3>{{nombre}}</h3><p class="role">Guía principal, Nuquí</p></div>
@@ -254,7 +286,8 @@
   <section id="faq">
     <div class="wrap faq-wrap">
       <div>
-        <h2>¿Primera vez en Colombia?</h2>
+        <div class="kicker"><span class="horizons" aria-hidden="true"><i></i><i></i><i></i></span>Preguntas</div>
+        <h2>¿Primera vez en <em>Colombia?</em></h2>
       </div>
       <div>
         <details class="faq-item" open>
@@ -281,7 +314,8 @@
   <section id="blog">
     <div class="wrap">
       <div class="section-head">
-        <h2>Notas del camino.</h2>
+        <div class="kicker"><span class="horizons" aria-hidden="true"><i></i><i></i><i></i></span>Journal</div>
+        <h2>Notas del <em>camino.</em></h2>
       </div>
       <div class="blog-grid">
         <div class="blog-card"><div class="arch-visual"><div class="fill fill-1"></div></div><p class="cat">Playas</p><h3>Descanso en costas tranquilas</h3><span class="soon">Próximamente</span></div>
@@ -296,7 +330,7 @@
   <section id="newsletter" style="padding:0;">
     <div class="wrap">
       <div class="newsletter">
-        <h2>Mantente cerca</h2>
+        <h2>Mantente <em>cerca</em></h2>
         <p>Recibe nuevas rutas y tarifas de temporada baja primero. Un email al mes, y puedes darte de baja cuando quieras.</p>
         <form id="newsletterForm" class="newsletter-form" novalidate>
           <input class="field" type="email" placeholder="tu@email.com" aria-label="Correo electrónico" required>
@@ -328,6 +362,7 @@
         <ul><li>{{email}}</li><li>{{teléfono}}</li><li>Bogotá, Colombia</li></ul>
       </div>
     </div>
+    <div class="footer-mark" aria-hidden="true">Tres <em>Horizontes</em></div>
     <div class="footer-bottom">
       <span>© 2026 Tres Horizontes. Operador registrado RNT.</span>
       <span>Viaja a la verdadera Colombia.</span>
