@@ -145,67 +145,93 @@ Se buscará aplicar un diseño **responsive**, de manera que la interfaz se adap
 
 ## 🛠️ Tecnologías
 
-Las tecnologías iniciales del proyecto podrán incluir:
-
 ### Frontend
 
-- HTML5
-- CSS3
-- JavaScript
+- HTML5, CSS3 y JavaScript (sin frameworks)
+- Animaciones con CSS nativo: View Transitions y animaciones ligadas al scroll
+- Iconos: Phosphor Icons · Tipografías: Geist e Instrument Serif
 
-### Control de versiones
+### Backend
 
-- Git
-- GitHub
+- Node.js + Express
+- PostgreSQL (`pg`)
+- Autenticación con JWT (`jsonwebtoken`) y contraseñas cifradas (`bcryptjs`)
 
-### Desarrollo
+### Control de versiones y desarrollo
 
+- Git y GitHub
 - Visual Studio Code
-
-En futuras etapas se podrá evaluar la incorporación de tecnologías como:
-
-- React
-- Node.js
-- APIs
-- Bases de datos
-- Servicios de autenticación
-- Servicios Cloud
 
 ---
 
-## 📂 Estructura inicial del proyecto
-
-La estructura inicial propuesta es:
+## 📂 Estructura del proyecto
 
 ```text
-colombia-travel-experience/
-│
-├── index.html
+3H/
 ├── README.md
+├── CHANGELOG.md            ← registro de cambios
 │
-├── css/
-│   └── style.css
+├── frontend/
+│   ├── index.html          ← landing page
+│   ├── dashboard.html      ← panel del viajero (tras iniciar sesión)
+│   ├── css/
+│   │   ├── style.css       ← estilos base y landing
+│   │   ├── dashboard.css   ← estilos del panel
+│   │   └── motion.css      ← sistema de animaciones compartido
+│   ├── js/
+│   │   ├── main.js         ← landing: modales, tours, animaciones de scroll
+│   │   └── dashboard.js    ← panel: reservas, perfil, animaciones
+│   └── img/
 │
-├── js/
-│   └── script.js
-│
-├── img/
-│   ├── amazonas/
-│   ├── mavecure/
-│   ├── nuqui/
-│   ├── tayrona/
-│   └── santa-marta/
-│
-└── pages/
-    ├── destinos.html
-    ├── paquetes.html
-    ├── opiniones.html
-    ├── registro.html
-    ├── agenda.html
-    └── contacto.html
+└── backend/
+    ├── server.js           ← API REST (Express)
+    ├── routes/
+    ├── data/
+    └── .env                ← variables locales (no se sube a GitHub)
 ```
 
-Esta estructura podrá cambiar a medida que avance el desarrollo.
+---
+
+## ▶️ Cómo ejecutarlo
+
+**1. Backend** — crea `backend/.env` con estas variables:
+
+```text
+DB_HOST=
+DB_PORT=
+DB_NAME=
+DB_USER=
+DB_PASSWORD=
+JWT_SECRET=
+PORT=5000
+```
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+**2. Frontend** — sírvelo con cualquier servidor estático, por ejemplo:
+
+```bash
+cd frontend
+npx serve .
+```
+
+Y abre la dirección que indique la terminal. Es mejor usar un servidor que abrir el archivo directamente, porque así funcionan las transiciones entre páginas.
+
+### Endpoints principales de la API
+
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| POST | `/api/auth/register` | Crear cuenta |
+| POST | `/api/auth/login` | Iniciar sesión |
+| GET | `/api/tours` | Listar tours |
+| GET / POST | `/api/bookings` | Ver y crear reservas (requiere sesión) |
+| PATCH | `/api/bookings/:id/cancel` | Cancelar una reserva |
+| PUT | `/api/users/me` | Editar perfil |
+| POST | `/api/contact` · `/api/newsletter` | Contacto y suscripción |
 
 ---
 
@@ -317,7 +343,19 @@ Por esta razón, la plataforma deberá:
 
 🚧 **Proyecto en desarrollo**
 
-Actualmente nos encontramos en la etapa inicial de planificación, aprendizaje de Git/GitHub y construcción de la estructura del proyecto.
+**Versión actual: 0.2.0**
+
+Ya están listos:
+
+- ✅ Landing page completa y responsive.
+- ✅ Registro e inicio de sesión de usuarios.
+- ✅ Panel del viajero: resumen, reservas, nueva reserva y perfil.
+- ✅ Cancelación de reservas y edición de perfil.
+- ✅ Sistema de animaciones en toda la web.
+
+Próximos pasos: opiniones de viajeros, contacto con asesor y publicación.
+
+👉 El detalle de cada cambio está en el [**CHANGELOG**](CHANGELOG.md).
 
 ---
 
